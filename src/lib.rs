@@ -118,6 +118,11 @@ mod tests {
         assert_eq!(super::parse_boolean("true"), Ok(("", true)));
         assert_eq!(super::parse_boolean("false"), Ok(("", false)));
     }
+
+    #[test]
+    fn parse_null_test() {
+        assert_eq!(super::parse_null("null"), Ok(("", ())));
+    }
 }
 
 // #[test]
