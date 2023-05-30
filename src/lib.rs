@@ -123,6 +123,55 @@ mod tests {
     fn parse_null_test() {
         assert_eq!(super::parse_null("null"), Ok(("", ())));
     }
+
+    #[test]
+    fn parse_value_test() {
+        assert_eq!(
+            super::parse_value(" 123.456 "),
+            Ok((" ", super::JsonValue::Number(123.456)))
+        );
+        assert_eq!(
+            super::parse_value("123"),
+            Ok(("", super::JsonValue::Number(123.0)))
+        );
+        assert_eq!(
+            super::parse_value(" true "),
+            Ok((" ", super::JsonValue::Boolean(true)))
+        );
+        assert_eq!(
+            super::parse_value(" false "),
+            Ok((" ", super::JsonValue::Boolean(false)))
+        );
+        assert_eq!(
+            super::parse_value(" null "),
+            Ok((" ", super::JsonValue::Null))
+        );
+        assert_eq!(
+            super::parse_value(" \"Hello, World!\" "),
+            Ok((" ", super::JsonValue::String("Hello, World!".to_owned())))
+        );
+        assert_eq!(
+            super::parse_value(" [1, 2, 3] "),
+            Ok((
+                " ",
+                super::JsonValue::Array(vec![
+                    super::JsonValue::Number(1.0),
+                    super::JsonValue::Number(2.0),
+                    super::JsonValue::Number(3.0)
+                ])
+            ))
+        );
+        assert_eq!(
+            super::parse_value(" {\"foo\": \"bar\"} "),
+            Ok((
+                " ",
+                super::JsonValue::Object(vec![(
+                    "foo".to_owned(),
+                    super::JsonValue::String("bar".to_owned())
+                )])
+            ))
+        );
+    }
 }
 
 // #[test]
