@@ -125,6 +125,21 @@ mod tests {
     }
 
     #[test]
+    fn parse_array_test() {
+        assert_eq!(
+            super::parse_array("[1, 2, 3]"),
+            Ok((
+                "",
+                super::JsonValue::Array(vec![
+                    super::JsonValue::Number(1.0),
+                    super::JsonValue::Number(2.0),
+                    super::JsonValue::Number(3.0)
+                ])
+            ))
+        );
+    }
+
+    #[test]
     fn parse_value_test() {
         assert_eq!(
             super::parse_value(" 123.456 "),
