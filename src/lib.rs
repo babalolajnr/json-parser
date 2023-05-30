@@ -2,7 +2,7 @@ use nom::{
     branch::alt,
     bytes::complete::{escaped, is_not, tag},
     character::complete::{char, digit1, multispace0},
-    combinator::{map, map_res, peek, recognize},
+    combinator::{map, map_res, recognize},
     multi::separated_list0,
     sequence::{delimited, preceded, tuple},
     IResult, Parser,
@@ -111,6 +111,12 @@ mod tests {
     #[test]
     fn parse_integer_number_test() {
         assert_eq!(super::parse_number("123"), Ok(("", 123.0)));
+    }
+
+    #[test]
+    fn parse_boolean_test() {
+        assert_eq!(super::parse_boolean("true"), Ok(("", true)));
+        assert_eq!(super::parse_boolean("false"), Ok(("", false)));
     }
 }
 
