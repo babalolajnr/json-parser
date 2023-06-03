@@ -1,8 +1,8 @@
 use nom::{
     branch::alt,
-    bytes::complete::{escaped, is_not, tag},
+    bytes::complete::{escaped, is_not, tag, take_while},
     character::complete::{char, digit1, multispace0},
-    combinator::{map, map_res, recognize},
+    combinator::{map, map_res, opt, recognize},
     multi::separated_list0,
     sequence::{delimited, preceded, tuple},
     IResult, Parser,
@@ -65,19 +65,25 @@ pub fn parse_value(input: &str) -> IResult<&str, JsonValue> {
 }
 
 pub fn parse_object(input: &str) -> IResult<&str, JsonValue> {
-    let parse_pair = tuple((parse_string, preceded(multispace0, char(':')), parse_value));
-    let parse_object = delimited(
-        preceded(multispace0, char('{')),
-        separated_list0(preceded(multispace0, char(',')), parse_pair),
-        preceded(multispace0, char('}')),
-    );
-    map(parse_object, |pairs| {
-        let mut object = Vec::new();
-        for (key, _, value) in pairs {
-            object.push((key, value));
-        }
-        JsonValue::Object(object)
-    })(input)
+    let parse_opening_brace = preceded(multispace0, char('{'));
+    let parse_closing_brace = preceded(multispace0, char('}'));
+    let parse_comma = preceded(multispace0, char(','));
+
+    let parser = map(separated_list0(parse_comma, parse_key_value), |pairs| {
+        JsonValue::Object(pairs)
+    });
+
+    delimited(parse_opening_brace, parser, parse_closing_brace)(input)
+}
+
+pub fn parse_key_value(input: &str) -> IResult<&str, (String, JsonValue)> {
+    let parse_key = parse_string;
+    let parse_separator = preceded(multispace0, char(':'));
+    let parse_value = parse_value;
+
+    let mut parser = tuple((parse_key, parse_separator, parse_value));
+
+    parser(input).map(|(rest, (key, _, value))| (rest, (key, value)))
 }
 
 pub fn parse_array(input: &str) -> IResult<&str, JsonValue> {
@@ -92,6 +98,7 @@ pub fn parse_array(input: &str) -> IResult<&str, JsonValue> {
 pub fn parse_json(input: &str) -> IResult<&str, JsonValue> {
     preceded(multispace0, parse_value)(input)
 }
+
 
 #[cfg(test)]
 mod tests {
@@ -134,6 +141,24 @@ mod tests {
                     super::JsonValue::Number(1.0),
                     super::JsonValue::Number(2.0),
                     super::JsonValue::Number(3.0)
+                ])
+            ))
+        );
+    }
+
+    #[test]
+    fn parse_object_test() {
+        let result = super::parse_object(r#"{"a": "1", "b": "2"}"#);
+        // let result = super::parse_object(r#"[1,2,3]"#);
+
+        println!("{:?}", result);
+        assert_eq!(
+            result,
+            Ok((
+                "",
+                super::JsonValue::Object(vec![
+                    ("a".to_owned(), super::JsonValue::Number(1.0)),
+                    ("b".to_owned(), super::JsonValue::Number(2.0))
                 ])
             ))
         );
