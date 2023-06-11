@@ -1,8 +1,8 @@
 use nom::{
     branch::alt,
-    bytes::complete::{escaped, is_not, tag, take_while},
+    bytes::complete::{escaped, is_not, tag},
     character::complete::{char, digit1, multispace0},
-    combinator::{map, map_res, opt, recognize},
+    combinator::{map, map_res, recognize},
     multi::separated_list0,
     sequence::{delimited, preceded, tuple},
     IResult, Parser,
@@ -68,6 +68,7 @@ pub fn parse_object(input: &str) -> IResult<&str, JsonValue> {
     let parse_opening_brace = preceded(multispace0, char('{'));
     let parse_closing_brace = preceded(multispace0, char('}'));
     let parse_comma = preceded(multispace0, char(','));
+    // let parse_quoted_string = preceded(multispace0, parse_string);
 
     let parser = map(separated_list0(parse_comma, parse_key_value), |pairs| {
         JsonValue::Object(pairs)
@@ -98,7 +99,6 @@ pub fn parse_array(input: &str) -> IResult<&str, JsonValue> {
 pub fn parse_json(input: &str) -> IResult<&str, JsonValue> {
     preceded(multispace0, parse_value)(input)
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -143,6 +143,14 @@ mod tests {
                     super::JsonValue::Number(3.0)
                 ])
             ))
+        );
+    }
+
+    #[test]
+    fn parse_key_value_test() {
+        assert_eq!(
+            super::parse_key_value(r#""a": 1"#),
+            Ok(("", ("a".to_owned(), super::JsonValue::Number(1.0))))
         );
     }
 
